@@ -1,0 +1,12 @@
+{
+  "name": "google-drive-agent",
+  "version": "1.0.0",
+  "description": "A LangGraph-based agent that can interact with Google Drive",
+  "main": "main.py",
+  "scripts": {
+    "start": "python main.py"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "private": true
+} 

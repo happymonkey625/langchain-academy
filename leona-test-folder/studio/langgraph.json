@@ -1,0 +1,51 @@
+{
+    "name": "Google Drive Agent",
+    "description": "A LangGraph-based agent that can interact with Google Drive to help users find and search through their files and folders using natural language queries.",
+    "node_version": "20",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/happymonkey625/langchain-academy/tree/main/leona-test-folder/studio"
+    },
+    "environment_variables": [
+        {
+            "name": "OPENAI_API_KEY",
+            "description": "OpenAI API key for the language model",
+            "required": true
+        },
+        {
+            "name": "GOOGLE_DRIVE_FOLDER_ID",
+            "description": "ID of the Google Drive folder to access",
+            "required": true
+        }
+    ],
+    "tools": [
+        {
+            "name": "list_folders",
+            "description": "Lists all folders within the specified root folder in Google Drive"
+        },
+        {
+            "name": "search_in_folder",
+            "description": "Searches for files in a specific folder matching the query",
+            "parameters": {
+                "folder_id": "string",
+                "query": "string"
+            }
+        },
+        {
+            "name": "get_folder_id",
+            "description": "Gets the ID of a folder by its name within the root folder",
+            "parameters": {
+                "folder_name": "string"
+            }
+        }
+    ],
+    "entry_point": "main.py",
+    "dependencies": [
+        "langchain>=0.3.15",
+        "langchain-google-community[drive]>=2.0.4",
+        "google-auth-oauthlib>=1.2.1",
+        "google-auth-httplib2>=0.2.0",
+        "google-api-python-client>=2.159.0",
+        "python-dotenv>=1.0.1"
+    ]
+} 
