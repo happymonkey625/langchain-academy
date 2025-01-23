@@ -1,0 +1,73 @@
+To obtain and use a credentials.json file from the Google Cloud Console, follow these steps:
+
+1. Set Up a Google Cloud Project
+	1.	Go to the Google Cloud Console.
+	2.	If you don’t already have a project, click Create Project:
+	•	Provide a name for your project.
+	•	Click Create.
+
+2. Enable the Required APIs
+	1.	In the Cloud Console, navigate to APIs & Services > Library.
+	2.	Search for and enable the API(s) required for your project. For example:
+	•	Google Drive API
+	•	Google Sheets API
+	•	Any other API your project needs.
+
+3. Create Credentials
+	1.	Go to APIs & Services > Credentials.
+	2.	Click Create Credentials and choose Service Account.
+	•	Service accounts allow your application to authenticate with Google services without user interaction.
+	3.	Fill in the details (name, role, etc.) and click Create.
+	4.	Under Key type, select JSON and click Create.
+	5.	A file named credentials.json will be downloaded to your computer.
+
+4. Secure Your Credentials
+	•	Store the credentials.json file securely, as it contains sensitive information.
+	•	Do not share it publicly (e.g., on GitHub) to avoid unauthorized access.
+
+5. Use the Credentials in Your Application
+
+To use the credentials.json file in your Python application:
+
+Install Required Libraries
+
+pip install google-auth google-auth-oauthlib google-auth-httplib2
+
+Example Code
+
+Here’s a basic example for authenticating with the Google Drive API:
+
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+
+# Path to your credentials.json file
+credentials_path = "path/to/credentials.json"
+
+# Authenticate using the service account credentials
+credentials = Credentials.from_service_account_file(credentials_path, scopes=["https://www.googleapis.com/auth/drive"])
+
+# Create a Google Drive service object
+service = build('drive', 'v3', credentials=credentials)
+
+# Example: List files in Google Drive
+results = service.files().list(pageSize=10).execute()
+items = results.get('files', [])
+
+if not items:
+    print("No files found.")
+else:
+    print("Files:")
+    for item in items:
+        print(f"{item['name']} ({item['id']})")
+
+6. Grant Necessary Permissions
+
+For the service account to access the resources:
+	•	Share access: For APIs like Google Drive or Sheets, share access to specific files or folders with the service account email (found in the credentials.json file).
+	•	IAM Permissions: If your project uses GCP resources (like Cloud Storage), ensure the service account has the necessary roles.
+
+7. Test Your Application
+
+Run your script and verify that it works as expected. Ensure the credentials.json file is accessible to your application and matches the API you’re using.
+
+Let me know if you need further assistance! 😊

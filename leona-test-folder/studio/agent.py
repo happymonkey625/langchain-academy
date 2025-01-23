@@ -10,6 +10,7 @@ from googleapiclient.discovery import build
 import os.path
 import pickle
 from chain import create_chain, execute_chain_step
+import logging
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
@@ -73,10 +74,11 @@ model = ChatOpenAI()
 model_with_tools = model.bind_tools([list_folders, search_in_folder])
 
 # System message for the agent
-SYSTEM_PROMPT = """You are a helpful AI assistant that helps users find information in their Google Drive.
+SYSTEM_PROMPT = """You are a helpful AI assistant that helps users find information in a specific Google Drive folder.
 You have access to the following tools:
-- list_folders: Lists all folders in Google Drive
+- list_folders: Lists all folders within the specified root folder
 - search_in_folder: Searches for files in a specific folder matching a query
+- get_folder_id: Gets the ID of a folder by its name
 
 Follow these steps:
 1. First understand what the user is looking for
@@ -88,5 +90,106 @@ system_message = SystemMessage(content=SYSTEM_PROMPT)
 
 def agent_step(messages: List[BaseMessage]) -> BaseMessage:
     """Execute one step of the agent."""
-    chain = create_chain()
-    return execute_chain_step(chain, messages)
+    try:
+        chain = create_chain()
+        # First try to list folders
+        folders = list_folders()
+        
+        # If we have a query in the message, search in relevant folders
+        user_query = messages[-1].content if messages else ""
+        search_results = []
+        
+        # Extract folder IDs from the folders response
+        folder_ids = []
+        for line in folders.split('\n'):
+            if '(ID:' in line:
+                folder_id = line.split('(ID:')[1].strip()[:-1]  # Remove the closing parenthesis
+                folder_ids.append(folder_id)
+        
+        # Search in each folder
+        for folder_id in folder_ids:
+            result = search_in_folder(folder_id, user_query)
+            if not result.startswith("No files found"):
+                search_results.append(result)
+        
+        # Combine the results
+        response = f"Folders found:\n{folders}\n\n"
+        if search_results:
+            response += "Search results:\n" + "\n".join(search_results)
+        else:
+            response += f"No files found matching your query: '{user_query}'"
+            
+        return HumanMessage(content=response)
+    except Exception as e:
+        logging.error(f"Error in agent_step: {str(e)}")
+        return HumanMessage(content=f"Error accessing Google Drive: {str(e)}")
+
+class ReflectiveAgent:
+    def __init__(self, llm=None, tools=None):
+        self.llm = llm or ChatOpenAI()
+        self.tools = tools or [list_folders, search_in_folder]
+        self.model_with_tools = self.llm.bind_tools(self.tools)
+
+    def reflect_on_response(self, original_response: str) -> str:
+        """
+        Analyzes and potentially improves the response before delivering it.
+        """
+        reflection_prompt = f"""
+        Please analyze the following response and improve it if necessary:
+        
+        Original Response: {original_response}
+        
+        Consider the following aspects:
+        1. Completeness: Does it fully address the user's needs?
+        2. Clarity: Is it clear and well-structured?
+        3. Accuracy: Are all statements correct?
+        4. Actionability: Does it provide concrete steps if needed?
+        
+        If improvements are needed, provide an enhanced version. If the response is already optimal, return it unchanged.
+        
+        Enhanced Response:
+        """
+        
+        messages = [HumanMessage(content=reflection_prompt)]
+        response = self.llm.invoke(messages)
+        return response.content
+
+    async def get_initial_response(self, message: str) -> str:
+        """Gets initial response using existing agent logic."""
+        try:
+            # First list all folders
+            folders_result = await list_folders.ainvoke("")  # Use empty string as input
+            
+            # Search in each folder for the query
+            search_results = []
+            for line in folders_result.split('\n'):
+                if '(ID:' in line:
+                    folder_id = line.split('(ID:')[1].strip()[:-1]
+                    result = await search_in_folder.ainvoke({"folder_id": folder_id, "query": message})
+                    if not result.startswith("No files found"):
+                        search_results.append(result)
+            
+            # Combine results
+            response = f"I searched your Google Drive and found:\n\n"
+            if search_results:
+                response += "\n".join(search_results)
+            else:
+                response += f"No files found matching your query: '{message}'"
+            
+            return response
+            
+        except Exception as e:
+            logging.error(f"Error getting initial response: {str(e)}")
+            return f"Error accessing Google Drive: {str(e)}"
+
+    async def process_message(self, message: str) -> str:
+        """Process message with reflection."""
+        try:
+            initial_response = await self.get_initial_response(message)
+            if not initial_response:
+                return "I couldn't access Google Drive. Please check your authentication."
+            final_response = self.reflect_on_response(initial_response)
+            return final_response
+        except Exception as e:
+            logging.error(f"Error processing message: {str(e)}")
+            return f"An error occurred: {str(e)}"

@@ -1,0 +1,7 @@
+# Google Drive authentication
+credentials.json
+token.pickle
+.encryption_key
+
+# Environment variables
+.env 
