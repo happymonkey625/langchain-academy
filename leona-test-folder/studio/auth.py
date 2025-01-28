@@ -6,9 +6,20 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import json
+from dotenv import load_dotenv
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# Load environment variables
+load_dotenv()
+
+# Suppress oauth2client cache warnings
+logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
+logging.getLogger('googleapiclient.discovery').setLevel(logging.WARNING)
 
 # Constants
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
@@ -76,6 +87,9 @@ def get_google_drive_service():
 def get_root_folder_id():
     """Get the root folder ID for the application."""
     folder_id = os.getenv('GOOGLE_DRIVE_FOLDER_ID')
+    logging.info(f"Environment variables loaded: {dict(os.environ)}")  # Debug line
+    logging.info(f"Retrieved folder ID: {folder_id}")  # Debug line
+    
     if not folder_id:
         logging.warning("GOOGLE_DRIVE_FOLDER_ID not set in environment variables")
     return folder_id 

@@ -74,17 +74,18 @@ model = ChatOpenAI()
 model_with_tools = model.bind_tools([list_folders, search_in_folder])
 
 # System message for the agent
-SYSTEM_PROMPT = """You are a helpful AI assistant that helps users find information in a specific Google Drive folder.
+SYSTEM_PROMPT = """You are a helpful AI assistant that helps users find and understand information in their Google Drive.
 You have access to the following tools:
-- list_folders: Lists all folders within the specified root folder
-- search_in_folder: Searches for files in a specific folder matching a query
-- get_folder_id: Gets the ID of a folder by its name
+- search_drive_content: Searches through Google Drive folders and documents, returning both locations and content summaries
 
-Follow these steps:
-1. First understand what the user is looking for
-2. List folders if needed
-3. Search in relevant folders
-4. Provide a clear and concise answer"""
+Follow these steps when helping users:
+1. Use search_drive_content to find relevant documents
+2. Review the content summaries provided
+3. Provide a clear, organized response that includes:
+   - Where the relevant information was found (file paths)
+   - A synthesis of the key information from the documents
+   - Any relevant connections between documents
+"""
 
 system_message = SystemMessage(content=SYSTEM_PROMPT)
 

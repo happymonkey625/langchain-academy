@@ -4,7 +4,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from agent import agent_step
-from tools import list_folders, search_in_folder
+from tools import list_folders, search_in_folder, search_drive_content
 
 class AgentState(TypedDict):
     """State for the agent workflow."""
@@ -36,3 +36,17 @@ def create_agent_graph() -> StateGraph:
     workflow.add_edge("tools", "agent")
     
     return workflow.compile()
+
+def create_agent_graph_new():
+    """Creates the agent processing graph."""
+    model = ChatOpenAI(temperature=0)
+    
+    chain = (
+        RunnablePassthrough.assign(
+            search_results=lambda x: search_drive_content.invoke(x["messages"][0].content)
+        )
+        | ChatOpenAI(temperature=0)
+        | StrOutputParser()
+    )
+    
+    return chain
