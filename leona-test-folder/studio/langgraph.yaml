@@ -1,0 +1,16 @@
+environment:
+  - GOOGLE_CREDENTIALS
+  - GOOGLE_TOKEN
+  - OPENAI_API_KEY  # If you're using OpenAI
+  # Add any other environment variables your app needs
+
+requirements:
+  - google-auth
+  - google-auth-oauthlib
+  - google-auth-httplib2
+  - google-api-python-client
+  - langchain
+  - langgraph
+  # Add other dependencies as needed
+
+python_version: "3.9"  # Or whatever version you're using 

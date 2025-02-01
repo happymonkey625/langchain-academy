@@ -74,4 +74,15 @@ If you can't access files:
 1. Verify the folder ID in your `.env` file is correct
 2. Confirm your Google account has access to the folder
 3. Check the logs for any permission-related errors
-4. Try listing folders first to verify basic access works 
+4. Try listing folders first to verify basic access works
+
+### Handling Token Expiration
+
+If you encounter an "invalid_grant" or "Token has been expired or revoked" error:
+
+1. Delete either the `token.json` or `token.pickle` file from your project directory (depending on which one you have)
+2. Run your script again - it will prompt you to re-authenticate
+3. Follow the authentication flow in your browser
+4. A new valid token will be generated
+
+Note: This is normal behavior and can happen periodically for security reasons. 
